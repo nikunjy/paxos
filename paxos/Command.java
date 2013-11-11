@@ -2,6 +2,7 @@ public class Command {
 	ProcessId client;
 	int req_id;
 	Object op;
+	
 
 	public Command(ProcessId client, int req_id, Object op){
 		this.client = client;

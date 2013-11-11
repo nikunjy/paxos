@@ -1,0 +1,1 @@
+{"op":"addAccount","holderName":"Client 1","amount":500.0}

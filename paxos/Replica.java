@@ -2,6 +2,7 @@ import java.util.*;
 
 public class Replica extends Process {
 	ProcessId[] leaders;
+	List<Account> accounts;
 	int slot_num = 1;
 	Map<Integer /* slot number */, Command> proposals = new HashMap<Integer, Command>();
 	Map<Integer /* slot number */, Command> decisions = new HashMap<Integer, Command>();
@@ -11,6 +12,7 @@ public class Replica extends Process {
 		this.me = me;
 		this.leaders = leaders;
 		env.addProc(me, this);
+		accounts = new ArrayList<Account>();
 	}
 
 	void propose(Command c){
@@ -34,22 +36,12 @@ public class Replica extends Process {
 				return;
 			}
 		}
-		System.out.println("" + me + ": perform " + c);
+		
+		BankOperation op = BankOperation.factory(c.op.toString());
+		op.setAccounts(accounts);
+		System.out.println("" + me + ":perform "+op.operate());
 		slot_num++;
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	public void body(){
 		System.out.println("Here I am: " + me);

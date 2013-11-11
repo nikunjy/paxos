@@ -1,9 +1,15 @@
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Env {
 	Map<ProcessId, Process> procs = new HashMap<ProcessId, Process>();
-	public final static int nAcceptors = 3, nReplicas = 2, nLeaders = 2, nRequests = 10;
-
+	ProcessId [] acceptors;
+	ProcessId [] replicas;
+	ProcessId [] leaders;
+	public final static int nAcceptors = 3, nReplicas = 2, nLeaders = 2;
+	private int numClients;
 	synchronized void sendMessage(ProcessId dst, PaxosMessage msg){
 		Process p = procs.get(dst);
 		if (p != null) {
@@ -19,11 +25,30 @@ public class Env {
 	synchronized void removeProc(ProcessId pid){
 		procs.remove(pid);
 	}
-
+	class Client extends Thread {
+		public ProcessId pid;
+		public int clientId;
+		public Env env;
+		public void run() { 
+			try {
+				BufferedReader br = new BufferedReader(new FileReader(clientId+".txt"));
+				String line = "";
+				while ((line = br.readLine()) != null) {
+					System.out.println("Client "+clientId +" executing "+line);
+					for (int r = 0; r < nReplicas; r++) {
+						sendMessage(env.replicas[r],
+								new RequestMessage(pid, new Command(pid, 0,line)));
+					}	
+				}
+			} catch(Exception e) {
+			}finally {
+			}
+		}
+	};
 	void run(String[] args){
-		ProcessId[] acceptors = new ProcessId[nAcceptors];
-		ProcessId[] replicas = new ProcessId[nReplicas];
-		ProcessId[] leaders = new ProcessId[nLeaders];
+		acceptors = new ProcessId[nAcceptors];
+		replicas = new ProcessId[nReplicas];
+		leaders = new ProcessId[nLeaders];
 
 		for (int i = 0; i < nAcceptors; i++) {
 			acceptors[i] = new ProcessId("acceptor:" + i);
@@ -37,17 +62,39 @@ public class Env {
 			leaders[i] = new ProcessId("leader:" + i);
 			Leader leader = new Leader(this, leaders[i], acceptors, replicas);
 		}
-
-		for (int i = 1; i < nRequests; i++) {
-			ProcessId pid = new ProcessId("client:" + i);
-			for (int r = 0; r < nReplicas; r++) {
-				sendMessage(replicas[r],
-					new RequestMessage(pid, new Command(pid, 0, "operation " + i)));
+		if (numClients == 1) {
+			for (int i = 1; i < 10; i++) {
+				ProcessId pid = new ProcessId("client:" + i);
+				BankOperation op = new BankOperation();
+				op.op = BankOperation.OperationTypes.ADDACCOUNT.value();
+				op.holderName = "Client "+i;
+				op.amount = 500;
+				for (int r = 0; r < nReplicas; r++) {
+					sendMessage(replicas[r],
+							new RequestMessage(pid, new Command(pid, 0, op.serialize())));
+				}
+			}
+		} else { 
+			for (int i = 1; i <= numClients ; i++) { 
+				ProcessId pid = new ProcessId("client:" + i);
+				System.out.println("starting client"+i);
+				Client c = new Client(); 
+				c.pid = pid; 
+				c.env = this;
+				c.clientId = i;
+				((Thread)c).run();
 			}
 		}
+
 	}
 
 	public static void main(String[] args){
-		new Env().run(args);
+		Env obj = new Env();
+		if (args.length>0) { 
+			obj.numClients = Integer.parseInt(args[0]);
+		} else { 
+			obj.numClients = 1;
+		}
+		obj.run(args);
 	}
 }
