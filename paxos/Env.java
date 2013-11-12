@@ -16,6 +16,17 @@ public class Env {
 			p.deliver(msg);
 		}
 	}
+	synchronized void sendPingMessage(ProcessId dst, PaxosMessage msg){
+		Process p = procs.get(dst);
+		for (ProcessId id : procs.keySet()) {
+			if (id.equals(dst)) { 
+			 p = procs.get(id);	
+			}
+		}
+		if (p != null) {
+			p.deliverPing(msg);
+		}
+	}
 
 	synchronized void addProc(ProcessId pid, Process proc){
 		procs.put(pid, proc);
