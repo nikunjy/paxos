@@ -24,15 +24,13 @@ public class Env {
 			}
 		}
 		if (p != null) {
-			p.deliverPing(msg);
+			p.deliver(msg);
 		}
 	}
-
 	synchronized void addProc(ProcessId pid, Process proc){
 		procs.put(pid, proc);
 		proc.start();
 	}
-
 	synchronized void removeProc(ProcessId pid){
 		procs.remove(pid);
 	}

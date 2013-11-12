@@ -9,17 +9,13 @@ public abstract class Process extends Thread {
 		body();
 		env.removeProc(me);
 	}
-
 	PaxosMessage getNextMessage(){
 		return inbox.bdequeue();
 	}
-	
-	PaxosMessage getPingMessage() { 
-		return inbox.pingDequeue();
+	PaxosMessage getPingMessage(long timeOut) { 
+		return inbox.bdequeue(timeOut);
 	}
-	
 	void sendPing(ProcessId dst, PaxosMessage msg) {
-		System.out.println("pinging "+dst+" from "+msg.src);
 		env.sendPingMessage(dst, msg);
 	}
 	void sendMessage(ProcessId dst, PaxosMessage msg){
@@ -28,8 +24,5 @@ public abstract class Process extends Thread {
 
 	void deliver(PaxosMessage msg){
 		inbox.enqueue(msg);
-	}
-	void deliverPing(PaxosMessage msg){
-		inbox.enqueuePing(msg);
 	}
 }

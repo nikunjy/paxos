@@ -67,14 +67,13 @@ public class Leader extends Process {
 								new ProcessId("pingacceptor:"+m.ballot_number.leader_id),ballot_number,env);
 						try {
 							((Thread)pinger).join();
-							System.out.println(this.me +"  success "+((Pinger)pinger).success);
 							if (!((Pinger)pinger).success)
 								break;
 						} catch(Exception e) { 
 							System.out.println("Exception pinging");
 						}
 					}while(true);
-					System.out.println(this.me+" continue ");
+					System.out.println(this.me+" Continue Preempting ");
 					ballot_number = new BallotNumber(m.ballot_number.round + 1, me);
 					new Scout(env, new ProcessId("scout:" + me + ":" + ballot_number),
 							me, acceptors, ballot_number);

@@ -15,26 +15,27 @@ class Pinger extends Process{
 		env.addProc(this.me,this);
 	}
 	public void body() { 
-		long timeOut = bn.round * 5000;
-		long startTime = new Date().getTime();
+		long timeOut = 5000/(bn.round+1);
 		PingRequestMessage request = new PingRequestMessage(leader,new Command(leader,0,"Ping Request"));
 		sendPing(winnerLeader,request);
-		while (true) {
-			PaxosMessage msg = getPingMessage();
-			if (!(msg instanceof PingReplyMessage))
-				continue;
-			PingReplyMessage reply = (PingReplyMessage)msg; 
-			System.out.println(this.me+" Got a reply from "+msg.src);
-			if (reply.src.equals(winnerLeader)) {
-				success = true;
-				break;
-			}
-			long currentTime = new Date().getTime(); 
-			if ( currentTime - startTime > timeOut) 
-				break;
+		System.out.println("Pinging from "+this.me +" to "+winnerLeader);
+		PaxosMessage msg = getPingMessage(timeOut);
+		if (msg == null) {
+			System.out.println("Pinging from "+this.me +" to "+winnerLeader+ " timed out");
+			success = false;
+			return;
+		}
+		if (!(msg instanceof PingReplyMessage)) {
+			success = false;
+			return;
+		}
+		PingReplyMessage reply = (PingReplyMessage)msg; 
+		System.out.println(this.me+" Got a reply from "+msg.src);
+		if (reply.src.equals(winnerLeader)) {
+			success = true;
+			return;
 		}
 	}
-	
 }
 class PingAcceptor extends Process {
 	public ProcessId leader;
@@ -48,13 +49,13 @@ class PingAcceptor extends Process {
 		int id = 0;
 		System.out.println("Accepting pings now "+leader);
 		while(true) { 
-			PaxosMessage msg = getPingMessage();
+			PaxosMessage msg = getNextMessage();
 			if (!(msg instanceof PingRequestMessage))
 				continue;
 			id++;
 			PingReplyMessage reply = new PingReplyMessage(leader,new Command(leader,id,"Ping Reply"));
 			sendPing(((PingRequestMessage)msg).src,reply);
 		}
-		
+
 	}
 }
