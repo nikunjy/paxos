@@ -17,7 +17,7 @@ class Pinger extends Process{
 	public void body() { 
 		long timeOut = 5000/(bn.round+1);
 		PingRequestMessage request = new PingRequestMessage(leader,new Command(leader,0,"Ping Request"));
-		sendPing(winnerLeader,request);
+		sendMessage(winnerLeader,request);
 		System.out.println("Pinging from "+this.me +" to "+winnerLeader);
 		PaxosMessage msg = getPingMessage(timeOut);
 		if (msg == null) {
@@ -35,27 +35,5 @@ class Pinger extends Process{
 			success = true;
 			return;
 		}
-	}
-}
-class PingAcceptor extends Process {
-	public ProcessId leader;
-	public PingAcceptor(ProcessId leader,Env env) { 
-		this.leader = leader;
-		this.env = env;
-		this.me = leader;
-		env.addProc(this.me,this);
-	}
-	public void body() { 
-		int id = 0;
-		System.out.println("Accepting pings now "+leader);
-		while(true) { 
-			PaxosMessage msg = getNextMessage();
-			if (!(msg instanceof PingRequestMessage))
-				continue;
-			id++;
-			PingReplyMessage reply = new PingReplyMessage(leader,new Command(leader,id,"Ping Reply"));
-			sendPing(((PingRequestMessage)msg).src,reply);
-		}
-
 	}
 }

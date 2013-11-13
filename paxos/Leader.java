@@ -5,7 +5,6 @@ public class Leader extends Process {
 	ProcessId[] replicas;
 	BallotNumber ballot_number;
 	boolean active = false;
-	PingAcceptor pingAcceptor;
 	Map<Integer, Command> proposals = new HashMap<Integer, Command>();
 	public Leader(Env env, ProcessId me, ProcessId[] acceptors,
 			ProcessId[] replicas){
@@ -15,7 +14,6 @@ public class Leader extends Process {
 		this.acceptors = acceptors;
 		this.replicas = replicas;
 		env.addProc(me, this);
-		pingAcceptor = new PingAcceptor(new ProcessId("pingacceptor:"+me),env);
 	}
 
 	public void body(){
@@ -25,7 +23,6 @@ public class Leader extends Process {
 				me, acceptors, ballot_number);
 		for (;;) {
 			PaxosMessage msg = getNextMessage();
-
 			if (msg instanceof ProposeMessage) {
 				ProposeMessage m = (ProposeMessage) msg;
 				if (!proposals.containsKey(m.slot_number)) {
@@ -64,7 +61,7 @@ public class Leader extends Process {
 					System.out.println(this.me+" preempted ");
 					do {
 						Process pinger = new Pinger(new ProcessId("pinger:"+this.me+":"+ballot_number.round),
-								new ProcessId("pingacceptor:"+m.ballot_number.leader_id),ballot_number,env);
+								m.ballot_number.leader_id,ballot_number,env);
 						try {
 							((Thread)pinger).join();
 							if (!((Pinger)pinger).success)
@@ -79,8 +76,10 @@ public class Leader extends Process {
 							me, acceptors, ballot_number);
 					active = false;
 				}
+			} else if ((msg instanceof PingRequestMessage)) {
+				PingReplyMessage reply = new PingReplyMessage(this.me,new Command(this.me,0,"Ping Reply"));
+				sendMessage(((PingRequestMessage)msg).src,reply);
 			}
-
 			else {
 				System.err.println("Leader: unknown msg type");
 			}

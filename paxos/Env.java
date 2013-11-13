@@ -12,16 +12,8 @@ public class Env {
 	private int numClients;
 	synchronized void sendMessage(ProcessId dst, PaxosMessage msg){
 		Process p = procs.get(dst);
-		if (p != null) {
-			p.deliver(msg);
-		}
-	}
-	synchronized void sendPingMessage(ProcessId dst, PaxosMessage msg){
-		Process p = procs.get(dst);
-		for (ProcessId id : procs.keySet()) {
-			if (id.equals(dst)) { 
-			 p = procs.get(id);	
-			}
+		if (msg instanceof PingReplyMessage) { 
+			System.out.println("Replying sending to : "+p.me);
 		}
 		if (p != null) {
 			p.deliver(msg);

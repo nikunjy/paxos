@@ -1,3 +1,5 @@
+import java.util.Date;
+
 public abstract class Process extends Thread {
 	ProcessId me;
 	Queue<PaxosMessage> inbox = new Queue<PaxosMessage>();
@@ -14,9 +16,6 @@ public abstract class Process extends Thread {
 	}
 	PaxosMessage getPingMessage(long timeOut) { 
 		return inbox.bdequeue(timeOut);
-	}
-	void sendPing(ProcessId dst, PaxosMessage msg) {
-		env.sendPingMessage(dst, msg);
 	}
 	void sendMessage(ProcessId dst, PaxosMessage msg){
 		env.sendMessage(dst, msg);

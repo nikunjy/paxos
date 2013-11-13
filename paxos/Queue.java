@@ -13,7 +13,7 @@ import java.util.*;
 		return ll.removeFirst();
 	}
 	public synchronized T bdequeue(long timeOut){
-		try { Thread.sleep(timeOut); } catch (InterruptedException e) {}
+		try { wait(timeOut); } catch (InterruptedException e) {}
 		if (ll.size() == 0) { 
 			return null;
 		}
