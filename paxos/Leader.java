@@ -40,7 +40,9 @@ public class Leader extends Process {
 				//System.out.println(this.me+" "+((ProposeMessage)msg).command);
 				ProposeMessage m = (ProposeMessage) msg;
 				if (!proposals.containsKey(m.slot_number)) { // if it hasn't already proposed something for that slot
+					System.out.println(this.me +" "+m.command);
 					if (m.command.isReadOnly()) {
+						System.out.println("read only command using max");
 						proposals.put(m.slot_number,m.command);
 						BallotNumber bn  = new BallotNumber(Env.max_ballot,this.me);
 						new Commander(env,
@@ -58,16 +60,22 @@ public class Leader extends Process {
 			}else if (msg instanceof AdoptedMessage) {
 				AdoptedMessage m = (AdoptedMessage) msg;
 				if (ballot_number.equals(m.ballot_number)) {
-					int maxBCount = 0;
+					Map<Integer,Integer> maxBCount = new HashMap<Integer,Integer>();
 					for (PValue pv : m.accepted) {
-						if (pv.ballot_number.round == Env.max_ballot) { 
-							maxBCount++;
+						if (pv.ballot_number.round == Env.max_ballot) {
+							if (!maxBCount.containsKey(pv.slot_number)) { 
+								maxBCount.put(pv.slot_number, 1);
+							} else { 
+								maxBCount.put(pv.slot_number, maxBCount.get(pv.slot_number)+1);
+							}
 						}
 					}
-					if (maxBCount < acceptors.length/2) { 
+					for(Integer slot : maxBCount.keySet()) {
+						if (maxBCount.get(slot) >= acceptors.length/2)
+							continue;
 						Iterator<PValue> it = m.accepted.iterator();
 						while (it.hasNext()) { 
-							if(it.next().ballot_number.round == Env.max_ballot) { 
+							if(it.next().slot_number == slot && it.next().ballot_number.round == Env.max_ballot) { 
 								it.remove();
 							}
 						}
@@ -92,6 +100,7 @@ public class Leader extends Process {
 
 			else if (msg instanceof PreemptedMessage) {
 				PreemptedMessage m = (PreemptedMessage) msg;
+				System.out.println(this.me+" preempted");
 				if (ballot_number.compareTo(m.ballot_number) < 0) {
 					writer.println(this.me+" preempted ");
 					do {

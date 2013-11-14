@@ -22,16 +22,17 @@ public class Commander extends Process {
 	}
 
 	public void body(){
+		
 		P2aMessage m2 = new P2aMessage(me, ballot_number, slot_number, command);
 		Set<ProcessId> waitfor = new HashSet<ProcessId>();
 		for (ProcessId a: acceptors) {
 			sendMessage(a, m2);
 			waitfor.add(a);
 		}
-
+		System.out.println(this.me +" sent messages to acceptors ");
 		while (2 * waitfor.size() >= acceptors.length) {
 			PaxosMessage msg = getNextMessage();
-
+			System.out.println(this.me+" "+msg.src);
 			if (msg instanceof P2bMessage) {
 				P2bMessage m = (P2bMessage) msg;
 
@@ -50,10 +51,10 @@ public class Commander extends Process {
 				}
 			}
 		}
-
 		for (ProcessId r: replicas) {
 			DecisionMessage msg = new DecisionMessage(me, slot_number, command);
 			sendMessage(r, msg);
 		}
+		System.out.println(this.me +" completed");
 	}
 }

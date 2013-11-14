@@ -63,9 +63,6 @@ public class Env {
 			}
 			return;
 		}
-		if (msg instanceof DecisionMessage) { 
-			System.out.println(msg.src+" "+((DecisionMessage)msg).command+" "+dst);
-		}
 		Process p = procs.get(dst);
 		if (p != null) {
 			p.deliver(msg);
