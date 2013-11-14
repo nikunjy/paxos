@@ -1,3 +1,4 @@
+import java.io.PrintWriter;
 import java.util.Date;
 
 class Pinger extends Process{
@@ -18,10 +19,8 @@ class Pinger extends Process{
 		long timeOut = 5000/(bn.round+1);
 		PingRequestMessage request = new PingRequestMessage(leader,new Command(leader,0,"Ping Request"));
 		sendMessage(winnerLeader,request);
-		System.out.println("Pinging from "+this.me +" to "+winnerLeader);
 		PaxosMessage msg = getPingMessage(timeOut);
 		if (msg == null) {
-			System.out.println("Pinging from "+this.me +" to "+winnerLeader+ " timed out");
 			success = false;
 			return;
 		}
@@ -30,8 +29,8 @@ class Pinger extends Process{
 			return;
 		}
 		PingReplyMessage reply = (PingReplyMessage)msg; 
-		System.out.println(this.me+" Got a reply from "+msg.src);
 		if (reply.src.equals(winnerLeader)) {
+			try {Thread.sleep(timeOut);}catch(Exception e){}
 			success = true;
 			return;
 		}

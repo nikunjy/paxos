@@ -1,17 +1,29 @@
+import java.io.PrintWriter;
 import java.util.*;
 
 public class Acceptor extends Process {
 	BallotNumber ballot_number = null;
 	Set<PValue> accepted = new HashSet<PValue>();
-
+	PrintWriter writer;
 	public Acceptor(Env env, ProcessId me){
 		this.env = env;
 		this.me = me;
+		try {
+			String name = "";
+			String [] names = this.me.toString().split(":");
+			for (int i = 0; i < names.length; i++) { 
+				name += names[i];
+			}
+			writer = new PrintWriter(name+".txt", "UTF-8");
+		} catch (Exception e) { 
+			System.out.println(e);
+		}
 		env.addProc(me, this);
 	}
 
 	public void body(){
-		System.out.println("Here I am: " + me);
+		writer.println("Here I am: " + me);
+		writer.flush();
 		for (;;) {
 			PaxosMessage msg = getNextMessage();
 
