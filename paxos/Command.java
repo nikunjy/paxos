@@ -9,7 +9,9 @@ public class Command {
 		this.req_id = req_id;
 		this.op = op;
 	}
-
+	public boolean isReadOnly() {
+		return BankOperation.isReadOnly((String)op);
+	}
 	public boolean equals(Object o) {
 		Command other = (Command) o;
 		return client.equals(other.client) && req_id == other.req_id && op.equals(other.op);

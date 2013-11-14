@@ -40,7 +40,11 @@ public class Commander extends Process {
 					}
 				}
 				else {
-					sendMessage(leader, new PreemptedMessage(me, m.ballot_number));
+					if (this.ballot_number.round != Env.max_ballot) {
+						sendMessage(leader, new PreemptedMessage(me, m.ballot_number));
+					} else { 
+						
+					}
 					return;
 				}
 			}

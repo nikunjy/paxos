@@ -10,6 +10,7 @@ public class Env {
 	ProcessId [] leaders;
 	public final static int nAcceptors = 3, nReplicas = 2, nLeaders = 2;
 	private int numClients;
+	public final static int max_ballot = 10000;
 	synchronized void sendMessage(ProcessId dst, PaxosMessage msg){
 		Process p = procs.get(dst);
 		if (msg instanceof PingReplyMessage) { 

@@ -6,6 +6,7 @@ public class Leader extends Process {
 	BallotNumber ballot_number;
 	boolean active = false;
 	Map<Integer, Command> proposals = new HashMap<Integer, Command>();
+	Integer max=0;
 	public Leader(Env env, ProcessId me, ProcessId[] acceptors,
 			ProcessId[] replicas){
 		this.env = env;
@@ -15,7 +16,7 @@ public class Leader extends Process {
 		this.replicas = replicas;
 		env.addProc(me, this);
 	}
-
+	
 	public void body(){
 		System.out.println("Here I am: " + me);
 
@@ -25,7 +26,15 @@ public class Leader extends Process {
 			PaxosMessage msg = getNextMessage();
 			if (msg instanceof ProposeMessage) {
 				ProposeMessage m = (ProposeMessage) msg;
-				if (!proposals.containsKey(m.slot_number)) {
+				if (!proposals.containsKey(m.slot_number)) { // if it hasn't already proposed something for that slot
+					if (m.command.isReadOnly()) {
+						proposals.put(m.slot_number,m.command);
+						BallotNumber bn  = new BallotNumber(Env.max_ballot,this.me);
+						new Commander(env,
+								new ProcessId("commander:" + me + ":" + bn + ":" + m.slot_number),
+								me, acceptors, replicas, bn, m.slot_number, m.command);
+						continue;
+					}
 					proposals.put(m.slot_number, m.command);
 					if (active) {
 						new Commander(env,
@@ -35,8 +44,21 @@ public class Leader extends Process {
 				}
 			}else if (msg instanceof AdoptedMessage) {
 				AdoptedMessage m = (AdoptedMessage) msg;
-
 				if (ballot_number.equals(m.ballot_number)) {
+					int maxBCount = 0;
+					for (PValue pv : m.accepted) {
+						if (pv.ballot_number.round == Env.max_ballot) { 
+							maxBCount++;
+						}
+					}
+					if (maxBCount < acceptors.length/2) { 
+						Iterator<PValue> it = m.accepted.iterator();
+						while (it.hasNext()) { 
+							if(it.next().ballot_number.round == Env.max_ballot) { 
+								it.remove();
+							}
+						}
+					}
 					Map<Integer, BallotNumber> max = new HashMap<Integer, BallotNumber>();
 					for (PValue pv : m.accepted) {
 						BallotNumber bn = max.get(pv.slot_number);

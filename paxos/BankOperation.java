@@ -24,6 +24,9 @@ public class BankOperation {
 		Gson g = new Gson();
 		return g.fromJson(msg,BankOperation.class);
 	}
+	public static boolean isReadOnly(String msg) { 
+		return factory(msg).op.equalsIgnoreCase(OperationTypes.QUERY.value());
+	}
 	public BankOperation() {
 		
 	}
