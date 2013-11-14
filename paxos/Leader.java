@@ -1,4 +1,7 @@
-import java.util.*;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class Leader extends Process {
 	ProcessId[] acceptors;
@@ -6,7 +9,7 @@ public class Leader extends Process {
 	BallotNumber ballot_number;
 	boolean active = false;
 	Map<Integer, Command> proposals = new HashMap<Integer, Command>();
-	Integer max=0;
+	PrintWriter writer;
 	public Leader(Env env, ProcessId me, ProcessId[] acceptors,
 			ProcessId[] replicas){
 		this.env = env;
@@ -14,17 +17,27 @@ public class Leader extends Process {
 		ballot_number = new BallotNumber(0, me);
 		this.acceptors = acceptors;
 		this.replicas = replicas;
+		try {
+			String name = "";
+			String [] names = this.me.toString().split(":");
+			for (int i = 0; i < names.length; i++) { 
+				name += names[i];
+			}
+			writer = new PrintWriter(name+".txt", "UTF-8");
+		} catch (Exception e) { 
+			System.out.println(e);
+		}
 		env.addProc(me, this);
 	}
-	
 	public void body(){
-		System.out.println("Here I am: " + me);
-
+		writer.println("Here I am: " + me);
 		new Scout(env, new ProcessId("scout:" + me + ":" + ballot_number),
 				me, acceptors, ballot_number);
 		for (;;) {
+			writer.flush();
 			PaxosMessage msg = getNextMessage();
 			if (msg instanceof ProposeMessage) {
+				//System.out.println(this.me+" "+((ProposeMessage)msg).command);
 				ProposeMessage m = (ProposeMessage) msg;
 				if (!proposals.containsKey(m.slot_number)) { // if it hasn't already proposed something for that slot
 					if (m.command.isReadOnly()) {
@@ -80,19 +93,23 @@ public class Leader extends Process {
 			else if (msg instanceof PreemptedMessage) {
 				PreemptedMessage m = (PreemptedMessage) msg;
 				if (ballot_number.compareTo(m.ballot_number) < 0) {
-					System.out.println(this.me+" preempted ");
+					writer.println(this.me+" preempted ");
 					do {
-						Process pinger = new Pinger(new ProcessId("pinger:"+this.me+":"+ballot_number.round),
+						Process pinger = new Pinger(new ProcessId("pinger:"+this.me.name),
 								m.ballot_number.leader_id,ballot_number,env);
 						try {
 							((Thread)pinger).join();
 							if (!((Pinger)pinger).success)
 								break;
+							else {
+								writer.println("Not preempting "+m.ballot_number.leader_id +" successfully pinged");
+								writer.flush();
+							}
 						} catch(Exception e) { 
-							System.out.println("Exception pinging");
+							writer.println("Exception pinging");
 						}
 					}while(true);
-					System.out.println(this.me+" Continue Preempting ");
+					writer.println(this.me+" Continue Preempting ");
 					ballot_number = new BallotNumber(m.ballot_number.round + 1, me);
 					new Scout(env, new ProcessId("scout:" + me + ":" + ballot_number),
 							me, acceptors, ballot_number);
@@ -103,7 +120,7 @@ public class Leader extends Process {
 				sendMessage(((PingRequestMessage)msg).src,reply);
 			}
 			else {
-				System.err.println("Leader: unknown msg type");
+				writer.println("Leader: unknown msg type");
 			}
 		}
 	}

@@ -1,3 +1,4 @@
+import java.io.PrintWriter;
 import java.util.*;
 
 public class Replica extends Process {
@@ -6,16 +7,30 @@ public class Replica extends Process {
 	int slot_num = 1;
 	Map<Integer /* slot number */, Command> proposals = new HashMap<Integer, Command>();
 	Map<Integer /* slot number */, Command> decisions = new HashMap<Integer, Command>();
-
+	PrintWriter writer;
 	public Replica(Env env, ProcessId me, ProcessId[] leaders){
 		this.env = env;
 		this.me = me;
 		this.leaders = leaders;
+		try {
+			String name = "";
+			String [] names = this.me.toString().split(":");
+			for (int i = 0; i < names.length; i++) { 
+				name += names[i];
+			}
+			writer = new PrintWriter(name+".txt", "UTF-8");
+		} catch (Exception e) { 
+			System.out.println(e);
+		}
 		env.addProc(me, this);
 		accounts = new ArrayList<Account>();
+		
 	}
 
 	void propose(Command c){
+		if (decisions.containsValue(c)) { 
+			System.out.println("Contained in decisions "+c);
+		}
 		if (!decisions.containsValue(c)) {
 			for (int s = 1;; s++) {
 				if (!proposals.containsKey(s) && !decisions.containsKey(s)) {
@@ -36,19 +51,21 @@ public class Replica extends Process {
 				return;
 			}
 		}
-		
+
 		BankOperation op = BankOperation.factory(c.op.toString());
 		op.setAccounts(accounts);
-		System.out.println("" + me + ":perform "+op.operate());
+		writer.println("" + me + ":perform "+op.operate());
+		writer.flush();
 		slot_num++;
 	}
 
 	public void body(){
-		System.out.println("Here I am: " + me);
+		writer.println("Here I am: " + me);
 		for (;;) {
 			PaxosMessage msg = getNextMessage();
 
 			if (msg instanceof RequestMessage) {
+				//System.out.println(this.me+" "+((RequestMessage)msg).command);
 				RequestMessage m = (RequestMessage) msg;
 				propose(m.command);
 			}
@@ -69,7 +86,7 @@ public class Replica extends Process {
 				}
 			}
 			else {
-				System.err.println("Replica: unknown msg type");
+				writer.println("Replica: unknown msg type");
 			}
 		}
 	}

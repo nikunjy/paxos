@@ -1,0 +1,3 @@
+leader:1 replica:0
+leader:0 replica:1
+leader:0 replica:2

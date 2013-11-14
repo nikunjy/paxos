@@ -1,3 +1,4 @@
+import java.io.PrintWriter;
 import java.util.*;
 
 public class Commander extends Process {
@@ -6,7 +7,7 @@ public class Commander extends Process {
 	BallotNumber ballot_number;
 	int slot_number;
 	Command command;
-
+	PrintWriter writer;
 	public Commander(Env env, ProcessId me, ProcessId leader, ProcessId[] acceptors,
 			ProcessId[] replicas, BallotNumber ballot_number, int slot_number, Command command){
 		this.env = env;
@@ -51,7 +52,8 @@ public class Commander extends Process {
 		}
 
 		for (ProcessId r: replicas) {
-			sendMessage(r, new DecisionMessage(me, slot_number, command));
+			DecisionMessage msg = new DecisionMessage(me, slot_number, command);
+			sendMessage(r, msg);
 		}
 	}
 }

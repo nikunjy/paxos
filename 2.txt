@@ -1,2 +1,4 @@
 {"op":"addAccount","holderName":"Client 2","amount":500.0}
 {"op":"withdraw","holderName":"Client 2","amount":20.0}
+delay:5000
+{"op":"withdraw","holderName":"Client 2","amount":10.0}

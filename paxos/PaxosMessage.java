@@ -36,7 +36,7 @@ class AdoptedMessage extends PaxosMessage {
 		this.src = src; this.ballot_number = ballot_number; this.accepted = accepted;
 	}	}
 class DecisionMessage extends PaxosMessage {
-	ProcessId src; int slot_number; Command command;
+	int slot_number; Command command;
 	public DecisionMessage(ProcessId src, int slot_number, Command command){
 		this.src = src; this.slot_number = slot_number; this.command = command;
 	}	}
