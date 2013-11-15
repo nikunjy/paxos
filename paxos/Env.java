@@ -13,7 +13,6 @@ public class Env {
 	ProcessId [] leaders;
 	public final static int nAcceptors = 3, nReplicas = 3, nLeaders = 2;
 	private int numClients;
-	public final static int max_ballot = 10000;
 	class BlackList {
 		String process1; 
 		String process2;

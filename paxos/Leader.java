@@ -41,15 +41,6 @@ public class Leader extends Process {
 				ProposeMessage m = (ProposeMessage) msg;
 				if (!proposals.containsKey(m.slot_number)) { // if it hasn't already proposed something for that slot
 					System.out.println(this.me +" "+m.command);
-					if (m.command.isReadOnly()) {
-						System.out.println("read only command using max");
-						proposals.put(m.slot_number,m.command);
-						BallotNumber bn  = new BallotNumber(Env.max_ballot,this.me);
-						new Commander(env,
-								new ProcessId("commander:" + me + ":" + bn + ":" + m.slot_number),
-								me, acceptors, replicas, bn, m.slot_number, m.command);
-						continue;
-					}
 					proposals.put(m.slot_number, m.command);
 					if (active) {
 						new Commander(env,
@@ -60,26 +51,6 @@ public class Leader extends Process {
 			}else if (msg instanceof AdoptedMessage) {
 				AdoptedMessage m = (AdoptedMessage) msg;
 				if (ballot_number.equals(m.ballot_number)) {
-					Map<Integer,Integer> maxBCount = new HashMap<Integer,Integer>();
-					for (PValue pv : m.accepted) {
-						if (pv.ballot_number.round == Env.max_ballot) {
-							if (!maxBCount.containsKey(pv.slot_number)) { 
-								maxBCount.put(pv.slot_number, 1);
-							} else { 
-								maxBCount.put(pv.slot_number, maxBCount.get(pv.slot_number)+1);
-							}
-						}
-					}
-					for(Integer slot : maxBCount.keySet()) {
-						if (maxBCount.get(slot) >= acceptors.length/2)
-							continue;
-						Iterator<PValue> it = m.accepted.iterator();
-						while (it.hasNext()) { 
-							if(it.next().slot_number == slot && it.next().ballot_number.round == Env.max_ballot) { 
-								it.remove();
-							}
-						}
-					}
 					Map<Integer, BallotNumber> max = new HashMap<Integer, BallotNumber>();
 					for (PValue pv : m.accepted) {
 						BallotNumber bn = max.get(pv.slot_number);

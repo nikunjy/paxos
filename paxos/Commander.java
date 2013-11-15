@@ -22,7 +22,7 @@ public class Commander extends Process {
 	}
 
 	public void body(){
-		
+
 		P2aMessage m2 = new P2aMessage(me, ballot_number, slot_number, command);
 		Set<ProcessId> waitfor = new HashSet<ProcessId>();
 		for (ProcessId a: acceptors) {
@@ -42,11 +42,7 @@ public class Commander extends Process {
 					}
 				}
 				else {
-					if (this.ballot_number.round != Env.max_ballot) {
-						sendMessage(leader, new PreemptedMessage(me, m.ballot_number));
-					} else { 
-						
-					}
+					sendMessage(leader, new PreemptedMessage(me, m.ballot_number));
 					return;
 				}
 			}
