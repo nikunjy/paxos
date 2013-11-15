@@ -6,6 +6,13 @@ class Pinger extends Process{
 	public ProcessId winnerLeader;
 	boolean success; 
 	public BallotNumber bn;
+	static long initialTimeOut = 5000;
+	static void decTimeOut(long timeOut) { 
+		if (initialTimeOut - timeOut <= 1000) { 
+			return;
+		}
+		initialTimeOut -= timeOut;
+	}
 	public Pinger(ProcessId leader, ProcessId winnerLeader, BallotNumber bn,Env env) {
 		this.leader = leader;
 		this.winnerLeader = winnerLeader;
@@ -16,7 +23,7 @@ class Pinger extends Process{
 		env.addProc(this.me,this);
 	}
 	public void body() { 
-		long timeOut = 5000/(bn.round+1);
+		long timeOut = initialTimeOut * (bn.round+1);
 		PingRequestMessage request = new PingRequestMessage(leader,new Command(leader,0,"Ping Request"));
 		sendMessage(winnerLeader,request);
 		PaxosMessage msg = getPingMessage(timeOut);
@@ -30,7 +37,7 @@ class Pinger extends Process{
 		}
 		PingReplyMessage reply = (PingReplyMessage)msg; 
 		if (reply.src.equals(winnerLeader)) {
-			try {Thread.sleep(timeOut);}catch(Exception e){}
+			try {Thread.sleep(2000);}catch(Exception e){}
 			success = true;
 			return;
 		}

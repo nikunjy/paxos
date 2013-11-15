@@ -90,6 +90,7 @@ public class Leader extends Process {
 						}
 					}while(true);
 					writer.println(this.me+" Continue Preempting ");
+					Pinger.decTimeOut(2000);
 					ballot_number = new BallotNumber(m.ballot_number.round + 1, me);
 					new Scout(env, new ProcessId("scout:" + me + ":" + ballot_number),
 							me, acceptors, ballot_number);

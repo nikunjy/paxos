@@ -1,2 +1,2 @@
 {"op":"addAccount","holderName":"Client 1","amount":500.0}
-{"op":"query","holderName":"Client 1","amount":500.0}
+{"op":"query","holderName":"Client 1","amount":0.0}

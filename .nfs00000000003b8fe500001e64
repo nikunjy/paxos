@@ -1,7 +1,0 @@
-Here I am: replica:1
-replica:1:perform Account created for Client 1 with balance 500.0
-replica:1:perform Account created for Client 2 with balance 500.0
-replica:1:perform Account balance for client Client 1 is 500.0
-replica:1:perform Account balance for client Client 1 is 500.0
-replica:1:perform Account  debited with 20.0 for person Client 2 . New Balance 480.0
-replica:1:perform Account  debited with 10.0 for person Client 2 . New Balance 470.0

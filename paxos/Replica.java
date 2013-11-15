@@ -7,6 +7,7 @@ public class Replica extends Process {
 	int slot_num = 1;
 	Map<Integer /* slot number */, Command> proposals = new HashMap<Integer, Command>();
 	Map<Integer /* slot number */, Command> decisions = new HashMap<Integer, Command>();
+	Map<Command, Command> readOps = new HashMap<Command,Command>();
 	PrintWriter writer;
 	public Replica(Env env, ProcessId me, ProcessId[] leaders){
 		this.env = env;
@@ -31,6 +32,34 @@ public class Replica extends Process {
 		if (decisions.containsValue(c)) { 
 			System.out.println("Contained in decisions "+c);
 		}
+		if (c.isReadOnly()) { 
+			//No need to propose this.
+			BankOperation read = BankOperation.factory((String)c.op);
+			int readSlot = -1;
+			for (Integer slot : proposals.keySet()) { 
+				BankOperation write = BankOperation.factory((String)proposals.get(slot).op);
+				if (write.holderName.equalsIgnoreCase(read.holderName)) { 
+					if (slot > readSlot) { 
+						readSlot = slot;
+					}
+				}
+			}
+			if (readSlot !=-1) {
+				Command writeCommand = proposals.get(readSlot);
+				if (decisions.containsValue(writeCommand)) {
+					BankOperation op = BankOperation.factory(c.op.toString());
+					op.setAccounts(accounts);
+					writer.println("" + me + ":perform "+op.operate());
+					writer.flush();
+				} else {
+					System.out.println(readSlot+" "+c);
+					readOps.put(c,proposals.get(readSlot));
+				}
+			} else { 
+				System.out.println("ERROR");
+			}
+			return;
+		}
 		if (!decisions.containsValue(c)) {
 			for (int s = 1;; s++) {
 				if (!proposals.containsKey(s) && !decisions.containsKey(s)) {
@@ -51,7 +80,6 @@ public class Replica extends Process {
 				return;
 			}
 		}
-
 		BankOperation op = BankOperation.factory(c.op.toString());
 		op.setAccounts(accounts);
 		writer.println("" + me + ":perform "+op.operate());
@@ -63,15 +91,12 @@ public class Replica extends Process {
 		writer.println("Here I am: " + me);
 		for (;;) {
 			PaxosMessage msg = getNextMessage();
-
 			if (msg instanceof RequestMessage) {
-				//System.out.println(this.me+" "+((RequestMessage)msg).command);
 				RequestMessage m = (RequestMessage) msg;
 				propose(m.command);
-			}
-
-			else if (msg instanceof DecisionMessage) {
+			} else if (msg instanceof DecisionMessage) {
 				DecisionMessage m = (DecisionMessage) msg;
+				System.out.println(this.me+" "+m.slot_number+" "+m.command);
 				decisions.put(m.slot_number, m.command);
 				for (;;) {
 					Command c = decisions.get(slot_num);
@@ -84,6 +109,18 @@ public class Replica extends Process {
 					}
 					perform(c);
 				}
+				 
+				for (Command c : readOps.keySet()) { 
+					Command mappedWrite = readOps.get(c);
+					if (((DecisionMessage)msg).command.equals(mappedWrite)) { 
+						BankOperation op = BankOperation.factory(c.op.toString());
+						op.setAccounts(accounts);
+						writer.println("" + me + ":perform "+op.operate());
+						writer.flush();
+						readOps.remove(c);
+					} 
+				}
+				//##end of pending reads
 			}
 			else {
 				writer.println("Replica: unknown msg type");

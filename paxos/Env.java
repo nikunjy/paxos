@@ -97,9 +97,13 @@ public class Env {
 			this.message = message;
 		}
 	}
-	class UserReader extends Thread {
-		public Env env;
-		public void run() { 
+	class UserReader extends Process {
+		public UserReader(Env env,ProcessId pid) { 
+			this.env = env;
+			this.me = pid;
+			env.addProc(pid, this);	
+		}
+		public void body() { 
 			try {
 				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 				Thread.sleep(7000);
@@ -121,6 +125,13 @@ public class Env {
 							System.out.println("Adding to blacklist "+p[0]+" "+p[1]);
 							env.blackList.add(new BlackList(p[0],p[1]));
 							
+						} else if (type.equals(UserCommandTypes.COMMAND)) { 
+							String command = input.substring(input.indexOf(":")+1);
+							System.out.println(command);
+							for (int r=0;r<env.replicas.length;r++) {
+							sendMessage(env.replicas[r],
+									new RequestMessage(this.me, new Command(this.me, 0,command)));
+							}
 						}
 					}
 				}
@@ -199,11 +210,7 @@ public class Env {
 				//((Thread)c).start();
 			}
 		}
-		UserReader ucmd = new UserReader();
-		ucmd.env = this;
-		((Thread)ucmd).start();
-
-
+		UserReader ucmd = new UserReader(this,new ProcessId("usercmd:"));
 	}
 
 	public static void main(String[] args){

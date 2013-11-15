@@ -20,6 +20,7 @@ public class BankOperation {
 	public String accountNumber; 
 	public String holderName;
 	public double amount;
+	public int seqNumber;
 	public static  BankOperation factory(String msg) { 
 		Gson g = new Gson();
 		return g.fromJson(msg,BankOperation.class);
@@ -69,7 +70,7 @@ public class BankOperation {
 		return "Account balance for client "+account.holderName +" is "+account.balance;
 	}
 	public String operateDeposit(Account account, double amount) { 
-		account.balance -= amount;
+		account.balance += amount;
 		return "Account credited with "+amount+" for person "+account.holderName+" "+". New Balance "+account.balance;
 	}
 	public String operateWithdraw(Account account, double amount) { 
