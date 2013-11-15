@@ -25,7 +25,7 @@ public class Replica extends Process {
 		}
 		env.addProc(me, this);
 		accounts = new ArrayList<Account>();
-		
+
 	}
 
 	void propose(Command c){
@@ -46,17 +46,25 @@ public class Replica extends Process {
 			}
 			if (readSlot !=-1) {
 				Command writeCommand = proposals.get(readSlot);
-				if (decisions.containsValue(writeCommand)) {
-					BankOperation op = BankOperation.factory(c.op.toString());
-					op.setAccounts(accounts);
-					writer.println("" + me + ":perform "+op.operate());
-					writer.flush();
-				} else {
-					System.out.println(readSlot+" "+c);
-					readOps.put(c,proposals.get(readSlot));
+				boolean found = false;
+				for (Integer slot : decisions.keySet()) { 
+					if (decisions.containsValue(writeCommand)) { 
+						if (slot < slot_num) { 
+							BankOperation op = BankOperation.factory(c.op.toString());
+							op.setAccounts(accounts);
+							writer.println("" + me + ":perform "+op.operate());
+							writer.flush();
+							found = true;
+							break;
+						}
+					}
+				}
+				if (!found) {
+					System.out.println(c+ " maped to "+writeCommand);
+					readOps.put(c, writeCommand);
 				}
 			} else { 
-				System.out.println("ERROR");
+				System.out.println("No write found to map to");
 			}
 			return;
 		}
@@ -85,6 +93,17 @@ public class Replica extends Process {
 		writer.println("" + me + ":perform "+op.operate());
 		writer.flush();
 		slot_num++;
+		for (Command cmd : readOps.keySet()) { 
+			Command mappedWrite = readOps.get(cmd);
+			if (mappedWrite.equals(c)) { 
+				op = BankOperation.factory(cmd.op.toString());
+				op.setAccounts(accounts);
+				writer.println("" + me + ":perform "+op.operate());
+				writer.flush();
+				readOps.remove(c);
+			} 
+		}
+
 	}
 
 	public void body(){
@@ -108,17 +127,6 @@ public class Replica extends Process {
 						propose(c2);
 					}
 					perform(c);
-				}
-				 
-				for (Command c : readOps.keySet()) { 
-					Command mappedWrite = readOps.get(c);
-					if (((DecisionMessage)msg).command.equals(mappedWrite)) { 
-						BankOperation op = BankOperation.factory(c.op.toString());
-						op.setAccounts(accounts);
-						writer.println("" + me + ":perform "+op.operate());
-						writer.flush();
-						readOps.remove(c);
-					} 
 				}
 				//##end of pending reads
 			}

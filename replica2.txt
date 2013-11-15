@@ -4,4 +4,9 @@ replica:2:perform Account balance for client Client 1 is 500.0
 replica:2:perform Account created for Client 2 with balance 500.0
 replica:2:perform Account  debited with 20.0 for person Client 2 . New Balance 480.0
 replica:2:perform Account  debited with 10.0 for person Client 2 . New Balance 470.0
-replica:2:perform Account credited with 10.0 for person Client 2 . New Balance 480.0
+replica:2:perform Account  debited with 10.0 for person Client 2 . New Balance 460.0
+replica:2:perform Account credited with 10.0 for person Client 1 . New Balance 510.0
+replica:2:perform Account created for Client 3 with balance 500.0
+replica:2:perform Account balance for client Client 1 is 510.0
+replica:2:perform Account balance for client Client 1 is 510.0
+replica:2:perform Account balance for client Client 2 is 460.0
